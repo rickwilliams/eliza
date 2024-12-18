@@ -17,7 +17,7 @@ export default function Chat() {
 
     const mutation = useMutation({
         mutationFn: async (text: string) => {
-            const res = await fetch(`/api/${agentId}/message`, {
+            const res = await fetch(`http://localhost:3001/${agentId}/message`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -28,7 +28,11 @@ export default function Chat() {
                     roomId: `default-room-${agentId}`,
                 }),
             });
-            return res.json() as Promise<TextResponse[]>;
+            if (!res.ok) {
+                throw new Error(`API error: ${res.statusText}`);
+            }
+            const data = await res.json();
+            return Array.isArray(data) ? data : [data];
         },
         onSuccess: (data) => {
             setMessages((prev) => [...prev, ...data]);

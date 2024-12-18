@@ -1,5 +1,6 @@
 import { PostgresDatabaseAdapter } from "@ai16z/adapter-postgres";
 import { SqliteDatabaseAdapter } from "@ai16z/adapter-sqlite";
+import { SupabaseDatabaseAdapter } from "@ai16z/adapter-supabase";
 import { AutoClientInterface } from "@ai16z/client-auto";
 import { DiscordClientInterface } from "@ai16z/client-discord";
 import { FarcasterAgentClient } from "@ai16z/client-farcaster";
@@ -308,31 +309,17 @@ export function getTokenForProvider(
 }
 
 function initializeDatabase(dataDir: string) {
-    if (process.env.POSTGRES_URL) {
-        elizaLogger.info("Initializing PostgreSQL connection...");
-        const db = new PostgresDatabaseAdapter({
-            connectionString: process.env.POSTGRES_URL,
-            parseInputs: true,
-        });
-
-        // Test the connection
-        db.init()
-            .then(() => {
-                elizaLogger.success(
-                    "Successfully connected to PostgreSQL database"
-                );
-            })
-            .catch((error) => {
-                elizaLogger.error("Failed to connect to PostgreSQL:", error);
-            });
-
-        return db;
+    if (process.env.SUPABASE_URL && process.env.SUPABASE_ANON_KEY) {
+        elizaLogger.info("Initializing Supabase connection...");
+        return new SupabaseDatabaseAdapter(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_ANON_KEY
+        );
     } else {
-        const filePath =
-            process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
-        // ":memory:";
-        const db = new SqliteDatabaseAdapter(new Database(filePath));
-        return db;
+        // Fallback to SQLite if no Supabase config
+        elizaLogger.warn("No Supabase configuration found, falling back to SQLite");
+        const filePath = process.env.SQLITE_FILE ?? path.resolve(dataDir, "db.sqlite");
+        return new SqliteDatabaseAdapter(new Database(filePath));
     }
 }
 
@@ -628,7 +615,7 @@ async function startAgent(
 
 const startAgents = async () => {
     const directClient = new DirectClient();
-    const serverPort = parseInt(settings.SERVER_PORT || "3000");
+    const serverPort = parseInt(settings.SERVER_PORT || "3001");
     const args = parseArguments();
 
     let charactersArg = args.characters || args.character;
@@ -652,6 +639,7 @@ const startAgents = async () => {
       // wrap it so we don't have to inject directClient later
       return startAgent(character, directClient)
     };
+
     directClient.start(serverPort);
 
     elizaLogger.log("Visit the following URL to chat with your agents:");

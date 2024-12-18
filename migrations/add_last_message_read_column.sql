@@ -1,0 +1,2 @@
+ALTER TABLE participants
+ADD COLUMN IF NOT EXISTS last_message_read TIMESTAMP WITH TIME ZONE;

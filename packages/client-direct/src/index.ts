@@ -235,7 +235,10 @@ export class DirectClient {
                 if (message) {
                     res.json([response, message]);
                 } else {
-                    res.json([response]);
+                    res.json([{
+                        text: response.text || response,
+                        user: runtime.agentId
+                    }]);
                 }
             }
         );
