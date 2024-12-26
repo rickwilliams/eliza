@@ -14,17 +14,36 @@ import { DatabaseAdapter } from "@ai16z/eliza";
 import { v4 as uuid } from "uuid";
 export class SupabaseDatabaseAdapter extends DatabaseAdapter {
     async getRoom(roomId: UUID): Promise<UUID | null> {
-        const { data, error } = await this.supabase
-            .from("rooms")
-            .select("id")
-            .eq("id", roomId)
-            .single();
-
-        if (error) {
-            throw new Error(`Error getting room: ${error.message}`);
+        if (!roomId) {
+            console.error('No roomId provided to getRoom');
+            return null;
         }
 
-        return data ? (data.id as UUID) : null;
+        // First try to get the room
+        let { data, error } = await this.supabase
+            .from('rooms')
+            .select('id')
+            .eq('id', roomId);
+
+        // If there's an error or no data, try to create the room
+        if (error || !data || data.length === 0) {
+            console.log(`Room ${roomId} not found, attempting to create...`);
+
+            const { data: newData, error: createError } = await this.supabase
+                .from('rooms')
+                .insert([{ id: roomId }])
+                .select('id');
+
+            if (createError) {
+                console.error(`Failed to create room: ${createError.message}`);
+                return null;
+            }
+
+            data = newData;
+        }
+
+        // Return the first room ID found or created
+        return data && data[0] ? data[0].id as UUID : null;
     }
 
     async getParticipantsForAccount(userId: UUID): Promise<Participant[]> {
@@ -679,5 +698,15 @@ export class SupabaseDatabaseAdapter extends DatabaseAdapter {
         }
 
         return data as Relationship[];
+    }
+
+    private handleSupabaseError(error: any, operation: string): null {
+        if (error) {
+            console.error(`Error in ${operation}: ${error.message}`);
+            if (error.details) {
+                console.error(`Details: ${error.details}`);
+            }
+        }
+        return null;
     }
 }

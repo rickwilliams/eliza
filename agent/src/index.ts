@@ -8,6 +8,7 @@ import { LensAgentClient } from "@ai16z/client-lens";
 import { SlackClientInterface } from "@ai16z/client-slack";
 import { TelegramClientInterface } from "@ai16z/client-telegram";
 import { TwitterClientInterface } from "@ai16z/client-twitter";
+
 import {
     AgentRuntime,
     CacheManager,
@@ -29,7 +30,7 @@ import {
 import { zgPlugin } from "@ai16z/plugin-0g";
 import { bootstrapPlugin } from "@ai16z/plugin-bootstrap";
 import createGoatPlugin from "@ai16z/plugin-goat";
-// import { intifacePlugin } from "@ai16z/plugin-intiface";
+//import { intifacePlugin } from "@ai16z/plugin-intiface";
 import { DirectClient } from "@ai16z/client-direct";
 import { aptosPlugin } from "@ai16z/plugin-aptos";
 import {
@@ -47,7 +48,7 @@ import { flowPlugin } from "@ai16z/plugin-flow";
 import { imageGenerationPlugin } from "@ai16z/plugin-image-generation";
 import { multiversxPlugin } from "@ai16z/plugin-multiversx";
 import { nearPlugin } from "@ai16z/plugin-near";
-import { nftGenerationPlugin } from "@ai16z/plugin-nft-generation";
+//import { nftGenerationPlugin } from "@ai16z/plugin-nft-generation";
 import { createNodePlugin } from "@ai16z/plugin-node";
 import { solanaPlugin } from "@ai16z/plugin-solana";
 import { suiPlugin } from "@ai16z/plugin-sui";
@@ -59,6 +60,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import yargs from "yargs";
+import { brainPlugin } from "./plugins/brain";
 
 const __filename = fileURLToPath(import.meta.url); // get the resolved path to the file
 const __dirname = path.dirname(__filename); // get the name of the directory
@@ -496,7 +498,7 @@ export async function createAgent(
             getSecret(character, "SOLANA_ADMIN_PUBLIC_KEY") &&
             getSecret(character, "SOLANA_PRIVATE_KEY") &&
             getSecret(character, "SOLANA_ADMIN_PRIVATE_KEY")
-                ? nftGenerationPlugin
+                ? null // ========================================= nftGenerationPlugin - uncomment this to get NFTs plugin working!!!!
                 : null,
             getSecret(character, "ZEROG_PRIVATE_KEY") ? zgPlugin : null,
             getSecret(character, "COINBASE_COMMERCE_KEY")
@@ -536,6 +538,10 @@ export async function createAgent(
             getSecret(character, "TON_PRIVATE_KEY") ? tonPlugin : null,
             getSecret(character, "SUI_PRIVATE_KEY") ? suiPlugin : null,
             getSecret(character, "STORY_PRIVATE_KEY") ? storyPlugin : null,
+            // =========================================
+            // Add Brain Plugin here
+            brainPlugin,
+            // =========================================
         ].filter(Boolean),
         providers: [],
         actions: [],
